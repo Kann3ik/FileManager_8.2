@@ -46,7 +46,7 @@ export const dataProvider = {
       .then(data => data?.value[0]?.tisa_documentidlist)
       .catch(err => console.log(err));
   },
-  async createAnnotation (fileName: string, documentBody: string | undefined, inputData: {Title: string, Description: string, IsLK: boolean}, documentCode: number, callback: (res: string) => void) {  
+  async createAnnotation (fileName: string, documentBody: string | undefined, inputData: {Title: string, Description: string, IsLK: boolean}, documentCode: number, callback: (res: string | { error: string }) => void) {  
     //@ts-ignore
     const entityId = window.parent?.Xrm.Page.data.entity.getId();
     //@ts-ignore
@@ -75,12 +75,30 @@ export const dataProvider = {
             req.onreadystatechange = null;
             if (this.status === 204) {
               callback('success');
+            } else {
+              // Обработка ошибки
+              let errorMessage = 'Ошибка при загрузке файла';
+              try {
+                const errorResponse = JSON.parse(this.responseText);
+                if (errorResponse?.error?.message) {
+                  errorMessage = errorResponse.error.message.replace(/\r\n/g, ' ').trim();
+                } else if (errorResponse?.error?.innererror?.message) {
+                  errorMessage = errorResponse.error.innererror.message.replace(/\r\n/g, ' ').trim();
+                }
+              } catch (e) {
+                // Если не удалось распарсить JSON, используем стандартное сообщение
+                errorMessage = `Ошибка ${this.status}: ${this.statusText}`;
+              }
+              callback({ error: errorMessage });
             }
         }
       };
+      req.onerror = function() {
+        callback({ error: 'Ошибка сети при загрузке файла' });
+      };
       req.send(JSON.stringify(data));
     } catch (error: any) {
-      console.log(error.message);
+      callback({ error: error.message || 'Неизвестная ошибка' });
     }
   },
   async treatmentFile(file: any) {

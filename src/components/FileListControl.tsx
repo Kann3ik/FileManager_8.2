@@ -155,7 +155,7 @@ const CustomForm: React.FC<{ formId: number, item: { name: string; code: number;
       return;
     }
 
-    dataProvider.createAnnotation(fileData?.fileName, fileData?.documentBody, { Title: values[`Title_${code}`] ?? '', Description: values[`Description_${code}`] ?? '', IsLK: values[`IsLK_${code}`] }, item.code, (res: string) => {
+    dataProvider.createAnnotation(fileData?.fileName, fileData?.documentBody, { Title: values[`Title_${code}`] ?? '', Description: values[`Description_${code}`] ?? '', IsLK: values[`IsLK_${code}`] }, item.code, (res: string | { error: string }) => {
       if (res === 'success') {
         form.resetFields();
         delay(0.5)
@@ -163,7 +163,8 @@ const CustomForm: React.FC<{ formId: number, item: { name: string; code: number;
         message.success('Примечание создано!');
         setLoading(false);
       } else {
-        message.success('Ошибка при создании примечания!');
+        const errorMessage = typeof res === 'object' && res.error ? res.error : 'Ошибка при создании примечания!';
+        message.error(errorMessage);
         setLoading(false);
       }
     });

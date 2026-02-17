@@ -4,6 +4,7 @@ import { useForm } from 'antd/es/form/Form';
 import { useEffect } from 'react';
 import { useState } from 'react';
 import { dataProvider } from '../Provider/DataProvider';
+import { getIsLK } from '../utils/urlParams';
 import moment from 'moment';
 import { saveAs } from 'file-saver';
 
@@ -144,6 +145,7 @@ export default FileListControl;
 
 const CustomForm: React.FC<{ formId: number, item: { name: string; code: number; }, form: any, loading: boolean, setLoading: React.Dispatch<React.SetStateAction<boolean>>, reload: () => void }> = ({ formId, item, form, loading, setLoading, reload }) => {
   const [fileData, setFileData] = useState<{ fileName: any; documentBody: string; }>();
+  const isLK = getIsLK();
 
   const saveForm = async (code: number) => {
     setLoading(true);
@@ -155,7 +157,7 @@ const CustomForm: React.FC<{ formId: number, item: { name: string; code: number;
       return;
     }
 
-    dataProvider.createAnnotation(fileData?.fileName, fileData?.documentBody, { Title: values[`Title_${code}`] ?? '', Description: values[`Description_${code}`] ?? '', IsLK: values[`IsLK_${code}`] }, item.code, (res: string | { error: string }) => {
+    dataProvider.createAnnotation(fileData?.fileName, fileData?.documentBody, { Title: values[`Title_${code}`] ?? '', Description: values[`Description_${code}`] ?? '', IsLK: isLK ? values[`IsLK_${code}`] : false }, item.code, (res: string | { error: string }) => {
       if (res === 'success') {
         form.resetFields();
         delay(0.5)
@@ -193,9 +195,11 @@ const CustomForm: React.FC<{ formId: number, item: { name: string; code: number;
           <Form.Item name={[`Description_${item.code}`]} style={{ padding: '0 10px' }}>
             <Input placeholder='Описание' />
           </Form.Item>
-          <Form.Item name={[`IsLK_${item.code}`]} valuePropName="checked" style={{ padding: '0 10px' }}>
-            <Checkbox>Доступно в ЛК</Checkbox>
-          </Form.Item>
+          {isLK && (
+            <Form.Item name={[`IsLK_${item.code}`]} valuePropName="checked" style={{ padding: '0 10px' }}>
+              <Checkbox>Доступно в ЛК</Checkbox>
+            </Form.Item>
+          )}
         </div>
         <div style={{display: 'flex', flexDirection: 'row'}}>
           <Form.Item name={[`File_${item.code}`]} valuePropName="checked" style={{ padding: '0 10px' }}>
